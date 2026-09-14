@@ -2,12 +2,11 @@ import { useState, useEffect } from "react";
 import JoinScreen from "./screens/JoinScreen";
 import CreateBoardScreen from "./screens/CreateBoardScreen";
 import DisplayNameScreen from "./screens/DisplayNameScreen";
+import TaskListScreen from "./screens/TaskListScreen";
+import TaskFormScreen from "./screens/TaskFormScreen";
 import { getBoard } from "./lib/boards";
-import {
-  saveJoinedBoard,
-  getLastBoardId,
-  getMemberId,
-} from "./lib/storage";
+import { subscribeTasks } from "./lib/tasks";
+import { saveJoinedBoard, getLastBoardId, getMemberId } from "./lib/storage";
 import "./App.css";
 
 export default function App() {
@@ -15,6 +14,7 @@ export default function App() {
   const [boardId, setBoardId] = useState(null);
   const [memberId, setMemberId] = useState(null);
   const [board, setBoard] = useState(null);
+  const [tasks, setTasks] = useState([]);
 
   // 起動時、前回のタスク欄があれば開く
   useEffect(() => {
@@ -37,6 +37,13 @@ export default function App() {
   useEffect(() => {
     if (!boardId) return;
     getBoard(boardId).then(setBoard);
+  }, [boardId]);
+
+  // 並び順の計算に使うので、ここでもタスクを見ておく
+  useEffect(() => {
+    if (!boardId) return;
+    const stop = subscribeTasks(boardId, setTasks);
+    return stop;
   }, [boardId]);
 
   function handleFound(id) {
@@ -96,13 +103,24 @@ export default function App() {
     );
   }
 
-  // タスク一覧は次に作る。今は確認用の仮置き
+  if (screen === "taskForm") {
+    return (
+      <TaskFormScreen
+        boardId={boardId}
+        memberId={memberId}
+        tasks={tasks}
+        onDone={() => setScreen("tasks")}
+        onCancel={() => setScreen("tasks")}
+      />
+    );
+  }
+
   return (
-    <div className="screen">
-      <h2>{board ? board.name : "..."}</h2>
-      <p className="hint">タスク欄ID: {boardId}</p>
-      <p className="hint">あなたのメンバーID: {memberId}</p>
-      <p>参加できました。タスク一覧はこれから作ります。</p>
-    </div>
+    <TaskListScreen
+      boardId={boardId}
+      memberId={memberId}
+      board={board}
+      onAddTask={() => setScreen("taskForm")}
+    />
   );
 }
