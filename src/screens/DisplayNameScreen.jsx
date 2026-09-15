@@ -87,7 +87,7 @@ export default function DisplayNameScreen({ boardId, onJoined, onBack }) {
       <label className="label">あなたの表示名</label>
       <input
         className="input"
-        placeholder="例）そうら"
+        placeholder="例）たろう"
         value={displayName}
         maxLength={12}
         onChange={(e) => setDisplayName(e.target.value)}
