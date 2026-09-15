@@ -1,20 +1,34 @@
 import { useState, useEffect } from "react";
 import { getMembers } from "../lib/boards";
-import { addTask, nextOrderIndex } from "../lib/tasks";
+import {
+  addTask,
+  updateTask,
+  nextOrderIndex,
+  ensureCapacity,
+  MAX_TASKS,
+} from "../lib/tasks";
 
 export default function TaskFormScreen({
   boardId,
   memberId,
   tasks,
+  task,
   onDone,
   onCancel,
 }) {
+  const editing = Boolean(task);
+
   const [members, setMembers] = useState([]);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState("");
-  const [priority, setPriority] = useState("medium");
-  const [assigneeIds, setAssigneeIds] = useState([]);
+  const [title, setTitle] = useState(task ? task.title : "");
+  const [description, setDescription] = useState(
+    task ? task.description || "" : ""
+  );
+  const [dueDate, setDueDate] = useState(task ? task.dueDate || "" : "");
+  const [priority, setPriority] = useState(task ? task.priority : "medium");
+  const [assigneeIds, setAssigneeIds] = useState(
+    task ? task.assigneeIds || [] : []
+  );
+  const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -30,21 +44,25 @@ export default function TaskFormScreen({
   async function handleSave() {
     if (!title.trim() || saving) return;
     setSaving(true);
+    setError("");
     try {
-      await addTask(
-        boardId,
-        memberId,
-        {
-          title: title.trim(),
-          description: description.trim(),
-          dueDate,
-          priority,
-          assigneeIds,
-        },
-        nextOrderIndex(tasks)
-      );
+      const input = {
+        title: title.trim(),
+        description: description.trim(),
+        dueDate: dueDate || null,
+        priority,
+        assigneeIds,
+      };
+      if (editing) {
+        await updateTask(boardId, task.id, input);
+      } else {
+        // 100件に達していたら古い完了タスクを消して空ける
+        await ensureCapacity(boardId, tasks);
+        await addTask(boardId, memberId, input, nextOrderIndex(tasks));
+      }
       onDone();
     } catch (e) {
+      setError(e.message || "エラーが発生しました");
       console.error(e);
       setSaving(false);
     }
@@ -58,13 +76,13 @@ export default function TaskFormScreen({
         <button className="back" onClick={onCancel}>
           ✕
         </button>
-        <h2>タスクを追加</h2>
+        <h2>{editing ? "タスクを編集" : "タスクを追加"}</h2>
         <button
           className="header-action"
           onClick={handleSave}
           disabled={!title.trim() || saving}
         >
-          {saving ? "..." : "追加"}
+          {saving ? "..." : editing ? "保存" : "追加"}
         </button>
       </div>
 
@@ -93,7 +111,7 @@ export default function TaskFormScreen({
       <input
         className="input"
         type="date"
-        value={dueDate}
+        value={dueDate || ""}
         onChange={(e) => setDueDate(e.target.value)}
       />
 
@@ -135,7 +153,13 @@ export default function TaskFormScreen({
         ))}
       </div>
 
-      <p className="hint">作成者：{myName}</p>
+      {error && <p className="error">{error}</p>}
+
+      {!editing && (
+        <p className="hint">
+          作成者：{myName}　／　{tasks.length}/{MAX_TASKS}件
+        </p>
+      )}
     </div>
   );
 }

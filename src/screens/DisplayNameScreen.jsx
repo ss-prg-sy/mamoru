@@ -6,6 +6,7 @@ export default function DisplayNameScreen({ boardId, onJoined, onBack }) {
   const [members, setMembers] = useState([]);
   const [displayName, setDisplayName] = useState("");
   const [sameNameMember, setSameNameMember] = useState(null);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -19,7 +20,7 @@ export default function DisplayNameScreen({ boardId, onJoined, onBack }) {
     const value = displayName.trim();
     if (!value) return;
 
-    const same = members.find((m) => m.displayName === value && m.isActive);
+    const same = members.find((m) => m.displayName === value);
     if (same) {
       setSameNameMember(same);
       return;
@@ -29,16 +30,17 @@ export default function DisplayNameScreen({ boardId, onJoined, onBack }) {
 
   async function doJoin(value) {
     setLoading(true);
+    setError("");
     try {
       const memberId = await joinBoard(boardId, value);
       onJoined(memberId);
     } catch (e) {
+      setError(e.message || "エラーが発生しました");
       console.error(e);
       setLoading(false);
     }
   }
 
-  // 同名の人として続ける
   function continueAsSame() {
     onJoined(sameNameMember.id);
   }
@@ -91,6 +93,8 @@ export default function DisplayNameScreen({ boardId, onJoined, onBack }) {
         onChange={(e) => setDisplayName(e.target.value)}
       />
       <p className="hint">1〜12文字</p>
+
+      {error && <p className="error">{error}</p>}
 
       <button
         className="btn btn-primary"

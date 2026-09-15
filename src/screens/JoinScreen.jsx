@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { findBoardByPassphrase } from "../lib/boards";
 
-export default function JoinScreen({ onFound, onCreateNew }) {
+export default function JoinScreen({ onFound, onCreateNew, onBack }) {
   const [passphrase, setPassphrase] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,6 +29,12 @@ export default function JoinScreen({ onFound, onCreateNew }) {
 
   return (
     <div className="screen join-screen">
+      {onBack && (
+        <button className="corner-back" onClick={onBack}>
+          ‹ 戻る
+        </button>
+      )}
+
       <div className="join-logo">✓</div>
       <h1 className="join-title">マモル</h1>
       <p className="join-sub">

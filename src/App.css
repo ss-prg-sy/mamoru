@@ -29,6 +29,7 @@ body {
   margin: 0 auto;
   min-height: 100vh;
   background: #fff;
+  position: relative;
 }
 
 .screen {
@@ -128,6 +129,17 @@ body {
   border: 1px solid var(--green);
 }
 
+.btn-danger {
+  background: var(--red);
+  color: #fff;
+}
+
+.btn-text {
+  background: none;
+  color: var(--red);
+  font-size: 15px;
+}
+
 .btn-add {
   margin-top: auto;
 }
@@ -144,6 +156,11 @@ body {
   font-size: 12px;
   margin: 4px 0 0;
   line-height: 1.6;
+}
+
+.hint.center,
+.center {
+  text-align: center;
 }
 
 .counter {
@@ -194,13 +211,17 @@ body {
   color: #d1d5db;
 }
 
+.header-spacer {
+  width: 44px;
+}
+
 .board-name {
   font-size: 24px;
   text-align: center;
   margin: 8px 0 24px;
 }
 
-/* ---------- 同名確認 ---------- */
+/* ---------- ダイアログ ---------- */
 
 .dialog {
   background: #fff;
@@ -246,8 +267,63 @@ body {
   margin: 2px 0 0;
 }
 
-.filter-btn {
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 10px;
+  color: var(--text);
+}
+
+.menu-wrap {
+  position: relative;
+}
+
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.menu {
+  position: absolute;
+  right: 0;
+  top: 32px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  z-index: 50;
+  overflow: hidden;
+  min-width: 150px;
+}
+
+.menu button {
+  display: block;
   width: 100%;
+  text-align: left;
+  padding: 13px 16px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text);
+}
+
+.menu button:active {
+  background: #f3f4f6;
+}
+
+.filter-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.filter-btn {
+  flex: 1;
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -255,8 +331,24 @@ body {
   font-size: 13px;
   color: var(--text-sub);
   cursor: pointer;
-  margin-bottom: 14px;
   font-family: inherit;
+}
+
+.filter-btn.on {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+  font-weight: 600;
+}
+
+.filter-clear {
+  width: 42px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-sub);
 }
 
 .task-list {
@@ -271,6 +363,11 @@ body {
   border-radius: 12px;
   margin-bottom: 10px;
   background: #fff;
+  cursor: pointer;
+}
+
+.task-card:active {
+  background: #fafafa;
 }
 
 .task-card.done .task-title {
@@ -329,6 +426,7 @@ body {
   border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
+  display: inline-block;
 }
 
 .badge-high {
@@ -346,7 +444,8 @@ body {
   color: #1d4ed8;
 }
 
-.due.overdue {
+.due.overdue,
+.overdue {
   color: var(--red);
   font-weight: 600;
 }
@@ -366,6 +465,43 @@ body {
   font-size: 16px;
   font-weight: 600;
   margin: 0 0 8px;
+}
+
+/* ---------- タスク詳細 ---------- */
+
+.detail-title {
+  font-size: 20px;
+  margin: 12px 0 10px;
+  word-break: break-word;
+}
+
+.detail-rows {
+  margin: 20px 0 auto;
+}
+
+.detail-row {
+  display: flex;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.detail-row-block {
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detail-label {
+  color: var(--text-sub);
+  font-size: 13px;
+  min-width: 56px;
+}
+
+.detail-desc {
+  margin: 0;
+  line-height: 1.7;
+  white-space: pre-wrap;
 }
 
 /* ---------- 優先度と担当者の選択 ---------- */
@@ -406,6 +542,12 @@ body {
   color: #1d4ed8;
 }
 
+.seg-on {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
 .assignees {
   display: flex;
   flex-wrap: wrap;
@@ -428,4 +570,373 @@ body {
   border-color: var(--green);
   color: var(--green-dark);
   font-weight: 600;
+}
+
+/* ---------- 絞り込みシート ---------- */
+
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 200;
+}
+
+.sheet {
+  background: #fff;
+  width: 100%;
+  max-width: 480px;
+  border-radius: 16px 16px 0 0;
+  padding: 20px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.sheet-header h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.sheet-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--text-sub);
+}
+
+.sheet-label {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 18px 0 8px;
+}
+
+/* ---------- 並び替え ---------- */
+
+.reorder-list {
+  margin-top: 16px;
+}
+
+.reorder-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  margin-bottom: 8px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.reorder-row:active {
+  cursor: grabbing;
+}
+
+.grip {
+  color: #c4c8ce;
+  font-size: 14px;
+  letter-spacing: -3px;
+}
+
+.reorder-title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- 削除後のトースト ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 24px;
+  width: calc(100% - 40px);
+  max-width: 440px;
+  background: #1f2937;
+  color: #fff;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  z-index: 300;
+}
+
+.toast button {
+  background: none;
+  border: none;
+  color: #6ee7a8;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ---------- 下のタブバー ---------- */
+
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: #fff;
+  border-top: 1px solid var(--line);
+  display: flex;
+  z-index: 150;
+}
+
+.tab {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 10px 0 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-sub);
+  font-family: inherit;
+}
+
+.tab.active {
+  color: var(--green);
+}
+
+.tab-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.tab-label {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.screen-list,
+.screen-tab {
+  padding-bottom: 88px;
+}
+
+.btn-add {
+  margin-top: auto;
+}
+
+/* ---------- メンバー画面 ---------- */
+
+.member-list {
+  margin: 8px 0 auto;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--line);
+  width: 100%;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  font-family: inherit;
+  font-size: 15px;
+  text-align: left;
+}
+
+.member-row.pick {
+  cursor: pointer;
+}
+
+.member-row.picked {
+  background: var(--green-light);
+  border-radius: 8px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--green-light);
+  color: var(--green-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.radio {
+  color: var(--green);
+  font-size: 14px;
+}
+
+.member-name {
+  flex: 1;
+  font-size: 15px;
+}
+
+.owner-tag {
+  font-size: 12px;
+  color: #b45309;
+  font-weight: 600;
+}
+
+.row-action {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: var(--text-sub);
+  cursor: pointer;
+  font-family: inherit;
+  padding: 4px;
+}
+
+.row-action.danger {
+  color: var(--red);
+}
+
+/* ---------- 設定画面 ---------- */
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 14px;
+  margin-bottom: 10px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+.setting-row.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.setting-icon {
+  font-size: 17px;
+}
+
+.setting-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.setting-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.setting-row.danger .setting-label {
+  color: var(--red);
+}
+
+.setting-value {
+  font-size: 13px;
+  color: var(--text-sub);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.setting-arrow {
+  color: #c4c8ce;
+  font-size: 18px;
+}
+
+/* ---------- タスク欄の切り替え ---------- */
+
+.board-switch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text);
+}
+
+.chevron {
+  font-size: 16px;
+  color: var(--text-sub);
+  line-height: 1;
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 15px 4px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  color: var(--text);
+}
+
+.switch-row.add {
+  color: var(--green);
+  font-weight: 600;
+  border-bottom: none;
+}
+
+.switch-name {
+  flex: 1;
+}
+
+.switch-check {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.sheet-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 10px 0;
+}
+
+.corner-back {
+  position: absolute;
+  top: 18px;
+  left: 16px;
+  background: none;
+  border: none;
+  font-size: 15px;
+  color: var(--text-sub);
+  cursor: pointer;
+  font-family: inherit;
 }

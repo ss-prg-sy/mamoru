@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { getMembers } from "../lib/boards";
 import {
-  subscribeTasks,
   toggleComplete,
   canComplete,
   isOverdue,
   formatDate,
+  applyFilter,
+  isFiltered,
+  DEFAULT_FILTER,
 } from "../lib/tasks";
+import FilterSheet from "./FilterSheet";
 
 const PRIORITY_LABEL = { high: "高", medium: "中", low: "低" };
 
@@ -14,26 +17,22 @@ export default function TaskListScreen({
   boardId,
   memberId,
   board,
+  tasks,
+  loading,
+  filter,
+  onChangeFilter,
   onAddTask,
+  onOpenTask,
+  onReorder,
+  onSwitchBoard,
 }) {
-  const [tasks, setTasks] = useState([]);
   const [members, setMembers] = useState([]);
-  const [showDone, setShowDone] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  // タスクの変更を監視する
-  useEffect(() => {
-    const stop = subscribeTasks(boardId, (list) => {
-      setTasks(list);
-      setLoading(false);
-    });
-    return stop; // 画面を離れるとき監視をやめる
-  }, [boardId]);
-
-  // メンバーを取る
   useEffect(() => {
     getMembers(boardId).then(setMembers);
-  }, [boardId]);
+  }, [boardId, tasks.length]);
 
   function memberName(id) {
     const m = members.find((x) => x.id === id);
@@ -46,34 +45,80 @@ export default function TaskListScreen({
     return ids.map(memberName).join("・");
   }
 
-  async function handleToggle(task) {
+  async function handleToggle(e, task) {
+    e.stopPropagation();
     if (!canComplete(task, memberId)) return;
     try {
       await toggleComplete(boardId, task, memberId);
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
     }
   }
 
-  const visible = tasks.filter((t) =>
-    showDone ? t.status === "done" : t.status === "open"
-  );
+  function filterText() {
+    const parts = [];
+    if (filter.status === "done") parts.push("完了");
+    else if (filter.status === "both") parts.push("すべての状態");
+    if (filter.assignee === "mine") parts.push("自分あて");
+    else if (filter.assignee !== "all")
+      parts.push(memberName(filter.assignee));
+    return parts.join("・");
+  }
+
+  const visible = applyFilter(tasks, filter, memberId);
+  const filtered = isFiltered(filter);
 
   return (
     <div className="screen screen-list">
       <div className="topbar">
         <div>
-          <h2 className="board-title">{board ? board.name : "..."}</h2>
+          <button className="board-switch" onClick={onSwitchBoard}>
+            <h2 className="board-title">{board ? board.name : "..."}</h2>
+            <span className="chevron">⌄</span>
+          </button>
           <p className="member-count">{members.length}人</p>
+        </div>
+        <div className="menu-wrap">
+          <button className="icon-btn" onClick={() => setMenuOpen((v) => !v)}>
+            ⋮
+          </button>
+          {menuOpen && (
+            <>
+              <div
+                className="menu-backdrop"
+                onClick={() => setMenuOpen(false)}
+              />
+              <div className="menu">
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onReorder();
+                  }}
+                >
+                  ↑↓ 並び替え
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      <button
-        className="filter-btn"
-        onClick={() => setShowDone((v) => !v)}
-      >
-        {showDone ? "完了を表示中（未完了に戻す）" : "絞り込み"}
-      </button>
+      <div className="filter-row">
+        <button
+          className={`filter-btn ${filtered ? "on" : ""}`}
+          onClick={() => setSheetOpen(true)}
+        >
+          ▽ {filtered ? filterText() : "絞り込み"}
+        </button>
+        {filtered && (
+          <button
+            className="filter-clear"
+            onClick={() => onChangeFilter(DEFAULT_FILTER)}
+          >
+            ✕
+          </button>
+        )}
+      </div>
 
       <div className="task-list">
         {loading && <p className="hint">読み込み中...</p>}
@@ -81,11 +126,18 @@ export default function TaskListScreen({
         {!loading && visible.length === 0 && (
           <div className="empty">
             <p className="empty-title">
-              {showDone
-                ? "完了したタスクはまだありません"
+              {filtered
+                ? "条件に合うタスクがありません"
                 : "まだタスクがありません"}
             </p>
-            {!showDone && (
+            {filtered ? (
+              <button
+                className="btn btn-outline"
+                onClick={() => onChangeFilter(DEFAULT_FILTER)}
+              >
+                絞り込みを解除
+              </button>
+            ) : (
               <p className="hint">
                 最初のタスクを追加して、
                 <br />
@@ -99,10 +151,11 @@ export default function TaskListScreen({
           <div
             key={task.id}
             className={`task-card ${task.status === "done" ? "done" : ""}`}
+            onClick={() => onOpenTask(task.id)}
           >
             <button
               className={`check ${task.status === "done" ? "checked" : ""}`}
-              onClick={() => handleToggle(task)}
+              onClick={(e) => handleToggle(e, task)}
               disabled={!canComplete(task, memberId)}
               aria-label="完了"
             >
@@ -131,6 +184,19 @@ export default function TaskListScreen({
       <button className="btn btn-primary btn-add" onClick={onAddTask}>
         ＋ タスクを追加
       </button>
+
+      {sheetOpen && (
+        <FilterSheet
+          members={members}
+          memberId={memberId}
+          filter={filter}
+          onApply={(f) => {
+            onChangeFilter(f);
+            setSheetOpen(false);
+          }}
+          onClose={() => setSheetOpen(false)}
+        />
+      )}
     </div>
   );
 }
